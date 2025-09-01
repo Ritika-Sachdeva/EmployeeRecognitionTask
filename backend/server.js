@@ -8,7 +8,7 @@ import recognitionRoutes from "./routes/recognitionRoutes.js";
 dotenv.config();
 const app = express();
 
-// ✅ Proper CORS setup for frontend (Vite default port 5173)
+
 app.use(
   cors({
     origin: "https://credora-osit.onrender.com",
@@ -19,10 +19,8 @@ app.use(
 // Middleware
 app.use(express.json());
 
-// ✅ Connect Database
 connectDB();
 
-// ✅ API Routes
 app.use("/api/employees", employeeRoutes);
 app.use("/api/recognitions", recognitionRoutes);
 
