@@ -60,15 +60,27 @@ import EmployeesPage from "./pages/EmployeeDirectory";
 // ✅ Utility: Get employee from localStorage safely
 const safeGetEmployee = () => {
   try {
-    return JSON.parse(localStorage.getItem("employee"));
-  } catch {
+    const employee = localStorage.getItem("employee");
+    return employee ? JSON.parse(employee) : null;
+  } catch (error) {
     return null;
   }
 };
 
-// ✅ Protected Route: Block unauthorized users
 const ProtectedRoute = ({ children }) => {
-  const employee = safeGetEmployee();
+  const [loading, setLoading] = React.useState(true);
+  const [employee, setEmployee] = React.useState(null);
+
+  React.useEffect(() => {
+    const data = localStorage.getItem("employee");
+    setEmployee(data ? JSON.parse(data) : null);
+    setLoading(false);
+  }, []);
+
+  if (loading) {
+    return <p className="text-center mt-10 text-gray-600">Checking authentication...</p>;
+  }
+
   return employee ? children : <Navigate to="/login" replace />;
 };
 
