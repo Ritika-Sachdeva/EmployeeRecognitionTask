@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
-import Navbar from "../components/Navbar";
-import { motion } from "framer-motion";
+import Navbar from "../components/Navbar3";
+import { serverUrl } from "../main";
+
 import {
   BarChart,
   Bar,
@@ -22,27 +23,20 @@ const EmployeeProfile = () => {
   const [receivedRecognitions, setReceivedRecognitions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [showModal, setShowModal] = useState(false);
-  const [to, setTo] = useState("");
-  const [category, setCategory] = useState("Teamwork");
-  const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-
-  // Fetch employee & recognitions
+  // ✅ Fetch employee & recognitions
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const empRes = await axios.get(`http://localhost:8000/api/employees/${id}`);
+        const empRes = await axios.get(`${serverUrl}/api/employees/${id}`);
         setEmployee(empRes.data);
 
-        const allEmployeesRes = await axios.get(`http://localhost:8000/api/employees`);
+        const allEmployeesRes = await axios.get(`${serverUrl}/api/employees`);
         setEmployees(allEmployeesRes.data);
 
-        const givenRes = await axios.get(`http://localhost:8000/api/recognitions/given/${id}`);
+        const givenRes = await axios.get(`${serverUrl}/api/recognitions/given/${id}`);
         setGivenRecognitions(givenRes.data);
 
-        const receivedRes = await axios.get(`http://localhost:8000/api/recognitions/received/${id}`);
+        const receivedRes = await axios.get(`${serverUrl}/api/recognitions/received/${id}`);
         setReceivedRecognitions(receivedRes.data);
       } catch (err) {
         console.error("Error fetching employee data:", err);
@@ -54,33 +48,6 @@ const EmployeeProfile = () => {
     fetchData();
   }, [id]);
 
-  // Submit recognition
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post("http://localhost:8000/api/recognitions", {
-        to,
-        from: id,
-        category,
-        message,
-      });
-      setSuccess("Recognition sent successfully!");
-      setError("");
-      setTo("");
-      setMessage("");
-      setCategory("Teamwork");
-      setShowModal(false);
-
-      // Refresh received recognitions
-      const receivedRes = await axios.get(`http://localhost:8000/api/recognitions/received/${id}`);
-      setReceivedRecognitions(receivedRes.data);
-    } catch (err) {
-      setError("Failed to send recognition. Try again!");
-      console.error(err);
-    }
-  };
-
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
@@ -101,16 +68,18 @@ const EmployeeProfile = () => {
     );
   }
 
-  // Prepare analytics data
+  // ✅ Prepare analytics data
   const categoryStats = receivedRecognitions.reduce((acc, recog) => {
     acc[recog.category] = (acc[recog.category] || 0) + 1;
     return acc;
   }, {});
+
   const chartData = Object.entries(categoryStats).map(([category, count]) => ({
     category,
     count,
   }));
 
+  // ✅ Badge system based on total recognitions
   const totalRecognitions = receivedRecognitions.length;
   let badge = "🌱 Newbie";
   if (totalRecognitions >= 20) badge = "🏆 Platinum Legend";
@@ -121,18 +90,22 @@ const EmployeeProfile = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Navbar */}
-      <Navbar onAddRecognition={() => setShowModal(true)} />
+      <Navbar />
 
       <div className="max-w-5xl mx-auto mt-8 px-4 pb-12">
         {/* Profile Header */}
-        <motion.div
-          className="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-6">
+          {/* Profile Picture */}
           <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-            {employee.name.charAt(0).toUpperCase()}
+            {employee.photo ? (
+              <img
+                src={employee.photo || "https://via.placeholder.com/150"}
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              employee.name.charAt(0).toUpperCase()
+            )}
           </div>
 
           <div>
@@ -143,38 +116,28 @@ const EmployeeProfile = () => {
             </p>
             <p className="mt-2 text-yellow-600 text-lg">{badge}</p>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats Cards */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
           {[
             { label: "Recognitions Given", value: givenRecognitions.length, color: "bg-blue-100" },
             { label: "Recognitions Received", value: receivedRecognitions.length, color: "bg-green-100" },
             { label: "Categories Achieved", value: Object.keys(categoryStats).length, color: "bg-purple-100" },
             { label: "Performance Badge", value: receivedRecognitions.length >= 5 ? "⭐" : "🎯", color: "bg-yellow-100" },
           ].map((stat, idx) => (
-            <motion.div
+            <div
               key={idx}
-              className={`${stat.color} p-5 rounded-xl text-center shadow-md hover:shadow-lg hover:scale-105 transition-all`}
+              className={`${stat.color} p-5 rounded-xl text-center shadow-md hover:shadow-lg transition-all`}
             >
               <h2 className="text-xl font-bold">{stat.value}</h2>
               <p className="text-gray-600 text-sm">{stat.label}</p>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Recognition Analytics */}
-        <motion.div
-          className="mt-10 bg-white rounded-2xl shadow-lg p-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
+        <div className="mt-10 bg-white rounded-2xl shadow-lg p-6">
           <h2 className="text-xl font-bold mb-4">📊 Recognition Analytics</h2>
           {chartData.length === 0 ? (
             <p className="text-gray-500">No recognition data to display.</p>
@@ -189,27 +152,19 @@ const EmployeeProfile = () => {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </motion.div>
+        </div>
 
         {/* Recent Recognitions */}
-        <motion.div
-          className="mt-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
+        <div className="mt-10">
           <h2 className="text-2xl font-bold mb-4">🏆 Recent Recognitions</h2>
           {receivedRecognitions.length === 0 ? (
             <p className="text-gray-500">No recognitions received yet.</p>
           ) : (
             <div className="space-y-4">
-              {receivedRecognitions.map((recog, index) => (
-                <motion.div
+              {receivedRecognitions.map((recog) => (
+                <div
                   key={recog._id}
                   className="p-4 bg-white rounded-lg shadow hover:shadow-lg transition"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * index }}
                 >
                   <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-blue-600">
@@ -223,85 +178,12 @@ const EmployeeProfile = () => {
                   <p className="text-gray-400 text-sm mt-2">
                     {dayjs(recog.createdAt).format("DD MMM YYYY, hh:mm A")}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
-        </motion.div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-2xl font-bold mb-5 text-center">🏆 Add Recognition</h2>
-
-            {error && <p className="text-red-500 mb-3">{error}</p>}
-            {success && <p className="text-green-600 mb-3">{success}</p>}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block font-semibold mb-1">To</label>
-                <select
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="">Select Employee</option>
-                  {employees
-                    .filter((emp) => emp._id !== id)
-                    .map((emp) => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-1">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="Teamwork">Teamwork</option>
-                  <option value="Innovation">Innovation</option>
-                  <option value="Leadership">Leadership</option>
-                  <option value="Customer Success">Customer Success</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold mb-1">Message</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Write your recognition message..."
-                  rows="3"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-              >
-                Submit Recognition
-              </button>
-            </form>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

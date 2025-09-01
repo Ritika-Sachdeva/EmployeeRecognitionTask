@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar"; // ✅ Import Navbar
+import Navbar from "../components/Navbar"; 
+import { serverUrl } from "../main";
 
 const RecognitionFeed = () => {
   const [recognitions, setRecognitions] = useState([]);
@@ -23,7 +24,7 @@ const RecognitionFeed = () => {
   // ✅ Fetch recognitions
   const fetchRecognitions = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/recognitions");
+      const res = await axios.get(`${serverUrl}/api/recognitions`);
       setRecognitions(res.data);
     } catch (error) {
       console.error("Error fetching recognitions:", error);
@@ -35,7 +36,7 @@ const RecognitionFeed = () => {
   // ✅ Fetch employees for dropdowns
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/employees");
+      const res = await axios.get(`${serverUrl}/api/employees`);
       setEmployees(res.data);
     } catch (err) {
       console.error("Error fetching employees:", err);
@@ -59,7 +60,7 @@ const RecognitionFeed = () => {
     }
 
     try {
-      await axios.post("http://localhost:8000/api/recognitions", {
+      await axios.post(`${serverUrl}/api/recognitions`, {
         from: loggedInUser?._id,
         to,
         category,
@@ -67,6 +68,9 @@ const RecognitionFeed = () => {
       });
 
       setSuccess("🎉 Recognition added successfully!");
+      setTimeout(() => {
+      setSuccess("");
+    }, 1000);
       setTo("");
       setMessage("");
       setCategory("Teamwork");
@@ -113,7 +117,7 @@ const RecognitionFeed = () => {
                   </span>
                 </div>
 
-                <p className="text-gray-800 mt-2">✨ {recog.message}</p>
+                <p className="text-gray-800 mt-2">🏆 {recog.message}</p>
 
                 <div className="flex justify-between mt-3 text-sm text-gray-500">
                   <p>
@@ -136,84 +140,97 @@ const RecognitionFeed = () => {
       </div>
 
       {/* Modal for Adding Recognition */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
-            >
-              ✕
-            </button>
+      {/* Modal for Adding Recognition */}
+{showModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
+      {/* Close Button */}
+      <button
+        onClick={() => setShowModal(false)}
+        className="absolute top-3 right-3 text-gray-600 hover:text-black"
+      >
+        ✕
+      </button>
 
-            <h2 className="text-2xl font-bold mb-5 text-center">
-              🏆 Add Recognition
-            </h2>
+      <h2 className="text-2xl font-bold mb-5 text-center">
+        🏆 Add Recognition
+      </h2>
 
-            {error && <p className="text-red-500 mb-3">{error}</p>}
-            {success && <p className="text-green-600 mb-3">{success}</p>}
+      {error && <p className="text-red-500 mb-3">{error}</p>}
+      {success && <p className="text-green-600 mb-3">{success}</p>}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* To Dropdown */}
-              <div>
-                <label className="block font-semibold mb-1">To</label>
-                <select
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="">Select Employee</option>
-                  {employees
-                    .filter((emp) => emp._id !== loggedInUser?._id) // ✅ Exclude self
-                    .map((emp) => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block font-semibold mb-1">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="Teamwork">Teamwork</option>
-                  <option value="Innovation">Innovation</option>
-                  <option value="Leadership">Leadership</option>
-                  <option value="Customer Success">Customer Success</option>
-                </select>
-              </div>
-
-              {/* Message */}
-              <div>
-                <label className="block font-semibold mb-1">Message</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  placeholder="Write your recognition message..."
-                  rows="3"
-                  required
-                />
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-              >
-                Submit Recognition
-              </button>
-            </form>
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* From (Logged-in User) */}
+        <div>
+          <label className="block font-semibold mb-1">From</label>
+          <input
+            type="text"
+            value={loggedInUser?.name || "Unknown User"}
+            disabled
+            className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+          />
         </div>
-      )}
+
+        {/* To Dropdown */}
+        <div>
+          <label className="block font-semibold mb-1">To</label>
+          <select
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">Select Employee</option>
+            {employees
+              .filter((emp) => emp._id !== loggedInUser?._id) // ✅ Exclude self
+              .map((emp) => (
+                <option key={emp._id} value={emp._id}>
+                  {emp.name}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* Category */}
+        <div>
+          <label className="block font-semibold mb-1">Category</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full p-2 border rounded"
+          >
+            <option value="Teamwork">Teamwork</option>
+            <option value="Innovation">Innovation</option>
+            <option value="Leadership">Leadership</option>
+            <option value="Customer Success">Customer Success</option>
+          </select>
+        </div>
+
+        {/* Message */}
+        <div>
+          <label className="block font-semibold mb-1">Message</label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="w-full p-2 border rounded"
+            placeholder="Write your recognition message..."
+            rows="3"
+            required
+          />
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
+        >
+          Submit Recognition
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

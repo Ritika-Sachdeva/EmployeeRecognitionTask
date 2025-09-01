@@ -9,10 +9,12 @@ dotenv.config();
 const app = express();
 
 // ✅ Proper CORS setup for frontend (Vite default port 5173)
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 // Middleware
 app.use(express.json());
@@ -23,7 +25,6 @@ connectDB();
 // ✅ API Routes
 app.use("/api/employees", employeeRoutes);
 app.use("/api/recognitions", recognitionRoutes);
-
 
 // Default Route
 app.get("/", (req, res) => {

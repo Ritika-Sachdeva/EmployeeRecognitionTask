@@ -56,7 +56,7 @@ import EmployeeProfile from "./pages/EmployeeProfile";
 import Leaderboard from "./components/Leaderboard";
 import SignInPage from "./pages/SignInPage";
 import Home from "./pages/Home";
-
+import EmployeesPage from "./pages/EmployeeDirectory";
 // ✅ Utility: Get employee from localStorage safely
 const safeGetEmployee = () => {
   try {
@@ -98,6 +98,14 @@ const App = () => {
             </RedirectIfLoggedIn>
           }
         />
+        <Route
+  path="/employees"
+  element={
+    <ProtectedRoute>
+      <EmployeesPage />
+    </ProtectedRoute>
+  }
+/>
 
         {/* ✅ Default Route */}
         <Route

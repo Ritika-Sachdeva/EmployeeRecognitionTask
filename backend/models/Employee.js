@@ -17,7 +17,7 @@ const employeeSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
-    default: "https://cdn-icons-png.flaticon.com/512/149/149071.png", // Placeholder avatar
+    default: "", // Placeholder avatar
   },
    password: { type: String, required: true }, 
 }, { timestamps: true });

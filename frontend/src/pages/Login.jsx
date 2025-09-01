@@ -1,33 +1,41 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { serverUrl } from "../main";
+import { toast } from "react-toastify";
 
 export default function Login({ className = "" }) {
-  const [activeTab, setActiveTab] = useState("employee"); // Default Employee
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Handle form submit
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const endpoint =
-        activeTab === "employee"
-          ? "http://localhost:8000/api/employees/login"
-          : "http://localhost:8000/api/admin/login";
+      const endpoint = `${serverUrl}/api/employees/login`;
 
       const res = await axios.post(endpoint, { email, password });
 
-      if (activeTab === "employee") {
+      if (res.data && res.data.token) {
+        // ✅ Save employee token & details
+        localStorage.setItem("token", res.data.token);
         localStorage.setItem("employee", JSON.stringify(res.data.employee));
-        navigate(`/profile/${res.data.employee._id}`);
+
+        toast.success("Login Successful!");
+        
+        navigate(`/employee/${res.data.employee._id}`);
+
+        
       } else {
-        localStorage.setItem("admin", JSON.stringify(res.data.admin));
-        navigate(`/admin/dashboard`);
+        setError("Login failed. Please try again.");
+        toast.error("Login failed. Please try again.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Try again!");
+      const msg = err.response?.data?.message || "Invalid credentials!";
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -40,30 +48,7 @@ export default function Login({ className = "" }) {
         Login
       </h2>
 
-      {/* Toggle Buttons */}
-      <div className="flex justify-center gap-4 mb-6">
-        <button
-          onClick={() => setActiveTab("employee")}
-          className={`px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
-            activeTab === "employee"
-              ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          Employee
-        </button>
-        <button
-          onClick={() => setActiveTab("admin")}
-          className={`px-6 py-2 rounded-lg font-semibold transition-all duration-300 ${
-            activeTab === "admin"
-              ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          Admin
-        </button>
-      </div>
-
+      {/* Subtitle */}
       <p className="text-center text-gray-600 mb-5 text-sm tracking-wide">
         Please enter your email and password to continue
       </p>
@@ -114,7 +99,7 @@ export default function Login({ className = "" }) {
           type="submit"
           className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-blue-400/50 transition-all duration-300"
         >
-          {activeTab === "employee" ? "Login as Employee" : "Login as Admin"}
+          Login
         </button>
       </form>
 
