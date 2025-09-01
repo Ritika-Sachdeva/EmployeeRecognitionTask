@@ -22,12 +22,10 @@ export default function Login({ className = "" }) {
         // ✅ Save employee token & details
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("employee", JSON.stringify(res.data.employee));
+        toast.success("Login Successful!");
         setTimeout(() => {
     window.location.href = `/employee/${res.data.employee._id}`;
   }, 100);
-        toast.success("Login Successful!");
-        
-        navigate(`/employee/${res.data.employee._id}`);
 
         
       } else {
