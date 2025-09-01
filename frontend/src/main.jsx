@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css"; // ✅ Required for styling
 import axios from "axios";
 
 // ✅ Server URL
-export const serverUrl = "http://localhost:8000";
+export const serverUrl = "https://employeerecognitiontask.onrender.com";
 
 // ✅ Set default base URL
 axios.defaults.baseURL = serverUrl;
